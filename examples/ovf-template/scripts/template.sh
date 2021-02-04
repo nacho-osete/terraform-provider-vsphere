@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -e
-
-TEMPLATE_URL="https://stable.release.core-os.net/amd64-usr/current/coreos_production_vmware_ova.ova"
+# TEMPLATE_URL may be changed to any appropriate ova file
+# This example uses the Terraform Ignition provider, so OS customization is only supported for Fedora/RHEL CoreOS images
+TEMPLATE_URL="https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/33.20210104.3.1/x86_64/fedora-coreos-33.20210104.3.1-vmware.x86_64.ova"
 TEMPLATE_DC="$(grep "datacenter" "${TF_DIR}/terraform.tfvars" | awk '{print $3}' | tr -d \'\"\' )"
 TEMPLATE_DS="$(grep "datastore_name" "${TF_DIR}/terraform.tfvars" | awk '{print $3}' | tr -d \'\"\' )"
 TEMPLATE_POOL="$(grep "resource_pool" "${TF_DIR}/terraform.tfvars" | awk '{print $3}' | tr -d \'\"\' )"
