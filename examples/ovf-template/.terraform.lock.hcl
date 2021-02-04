@@ -55,8 +55,7 @@ provider "registry.terraform.io/hashicorp/tls" {
 }
 
 provider "registry.terraform.io/hashicorp/vsphere" {
-  version     = "1.24.3"
-  constraints = "~> 1.3"
+  version = "1.24.3"
   hashes = [
     "h1:tmVOVBdsBWDIsPdIUgYguaA1dKAlUOKrnnmzGaMNAr4=",
     "zh:3b31455ca5a5c4ae7b65f1f4a51d651988d42862b9d4e078eb6fd5b238f98176",
