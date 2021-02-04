@@ -19,22 +19,22 @@ data "ignition_user" "example_root_user" {
 // humans to connect to the virtual machines and manage them.
 data "ignition_user" "example_core_user" {
   name                = "core"
-  ssh_authorized_keys = ["${var.management_ssh_keys}"]
+  ssh_authorized_keys = var.management_ssh_keys
 }
 
 // example_service_user defines the user snippet for the service user for the
 // virtual machine Ignition configuration. This prepares the user and the
 // directory where the service binary will be uploaded to.
 data "ignition_user" "example_service_user" {
-  name     = "${var.service_user}"
-  home_dir = "${var.service_directory}"
+  name     = var.service_user
+  home_dir = var.service_directory
 }
 
 // example_service_unit_content renders a template with the systemd unit
 // content for the service. This is fed into a systemd part of the Ignition
 // configuration.
 data "template_file" "example_service_unit_content" {
-  template = "${file("${path.module}/files/ovf-example.service.tpl")}"
+  template = file("${path.module}/files/ovf-example.service.tpl")
 
   vars = {
     service_directory  = "${var.service_directory}"
@@ -47,14 +47,14 @@ data "template_file" "example_service_unit_content" {
 data "ignition_systemd_unit" "example_service_unit" {
   name    = "ovf-example.service"
   enabled = false
-  content = "${data.template_file.example_service_unit_content.rendered}"
+  content = data.template_file.example_service_unit_content.rendered
 }
 
 // example_virtual_machine_network_content renders a template with the systemd-networkd unit
 // content for a specific virtual machine.
 data "template_file" "example_virtual_machine_network_content" {
-  count    = "${length(var.esxi_hosts)}"
-  template = "${file("${path.module}/files/00-ens192.network.tpl")}"
+  count    = length(var.esxi_hosts)
+  template = file("${path.module}/files/00-ens192.network.tpl")
 
   vars = {
     address = "${cidrhost(var.virtual_machine_network_address, var.virtual_machine_ip_address_start + count.index)}"
@@ -67,15 +67,15 @@ data "template_file" "example_virtual_machine_network_content" {
 // example_virtual_machine_network_unit defines the systemd network units for
 // each virtual machine.
 data "ignition_networkd_unit" "example_virtual_machine_network_unit" {
-  count   = "${length(var.esxi_hosts)}"
+  count   = length(var.esxi_hosts)
   name    = "00-ens192.network"
-  content = "${data.template_file.example_virtual_machine_network_content.*.rendered[count.index]}"
+  content = data.template_file.example_virtual_machine_network_content.*.rendered[count.index]
 }
 
 // example_virtual_machine_hostname_file defines the content of the system
 // hostname file, in other words, it sets the hostname.
 data "ignition_file" "example_virtual_machine_hostname_file" {
-  count      = "${length(var.esxi_hosts)}"
+  count      = length(var.esxi_hosts)
   filesystem = "root"
   path       = "/etc/hostname"
   mode       = "420"
@@ -88,7 +88,7 @@ data "ignition_file" "example_virtual_machine_hostname_file" {
 // example_ignition_config creates the CoreOS Ignition config for use on the
 // virtual machines.
 data "ignition_config" "example_ignition_config" {
-  count    = "${length(var.esxi_hosts)}"
+  count    = length(var.esxi_hosts)
   files    = ["${data.ignition_file.example_virtual_machine_hostname_file.*.id[count.index]}"]
   systemd  = ["${data.ignition_systemd_unit.example_service_unit.id}"]
   networkd = ["${data.ignition_networkd_unit.example_virtual_machine_network_unit.*.id[count.index]}"]
