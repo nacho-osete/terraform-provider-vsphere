@@ -24,7 +24,7 @@ website/node_modules
 *.test
 *.iml
 *.tfvars
-
+*.lock.hcl
 website/vendor
 
 # Test exclusions
