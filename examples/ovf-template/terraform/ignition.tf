@@ -11,7 +11,7 @@ resource "tls_private_key" "provisioning_ssh_key" {
 // provisioning key to the server.
 data "ignition_user" "root_user" {
   name                = "root"
-  ssh_authorized_keys = ["${tls_private_key.provisioning_ssh_key.public_key_openssh}"]
+  ssh_authorized_keys = [tls_private_key.provisioning_ssh_key.public_key_openssh]
 }
 
 // core_user creates the user snippet for the "core" user for the
@@ -37,9 +37,9 @@ data "template_file" "service_unit_content" {
   template = file("${path.module}/files/ovf-example.service.tpl")
 
   vars = {
-    service_directory  = "${var.service_directory}"
-    server_binary_name = "${var.server_binary_name}"
-    service_user       = "${var.service_user}"
+    service_directory  = var.service_directory
+    server_binary_name = var.server_binary_name
+    service_user       = var.service_user
   }
 }
 
@@ -57,10 +57,10 @@ data "template_file" "virtual_machine_network_content" {
   template = file("${path.module}/files/00-ens192.network.tpl")
 
   vars = {
-    address = "${cidrhost(var.virtual_machine_network_address, var.virtual_machine_ip_address_start + count.index)}"
-    mask    = "${element(split("/", var.virtual_machine_network_address), 1)}"
-    gateway = "${var.virtual_machine_gateway}"
-    dns     = "${join("\n", formatlist("DNS=%s", var.virtual_machine_dns_servers))}"
+    address = cidrhost(var.virtual_machine_network_address, var.virtual_machine_ip_address_start + count.index)
+    mask    = element(split("/", var.virtual_machine_network_address), 1)
+    gateway = var.virtual_machine_gateway
+    dns     = join("\n", formatlist("DNS=%s", var.virtual_machine_dns_servers))
   }
 }
 
@@ -82,7 +82,7 @@ data "ignition_file" "virtual_machine_hostname_file" {
   mode       = "420"
 
   content {
-    content = "${var.virtual_machine_name_prefix}${count.index}.${var.virtual_machine_domain}"
+    content = "${var.virtual_machine_name_prefix}${count.index}.${var.virtual_machine_domain}}"
   }
 }
 
@@ -90,13 +90,13 @@ data "ignition_file" "virtual_machine_hostname_file" {
 // virtual machines.
 data "ignition_config" "ignition_config" {
   count    = length(var.esxi_hosts)
-  //files    = ["${data.ignition_file.virtual_machine_hostname_file.*.id[count.index]}"]
-  //systemd  = ["${data.ignition_systemd_unit.service_unit.rendered}"]
-  //networkd = ["${data.ignition_networkd_unit.virtual_machine_network_unit.*.id[count.index]}"]
+  //files    = [data.ignition_file.virtual_machine_hostname_file.*.id[count.index]]
+  //systemd  = [data.ignition_systemd_unit.service_unit.rendered]
+  //networkd = [data.ignition_networkd_unit.virtual_machine_network_unit.*.id[count.index]]
 
   users = [
-    "${data.ignition_user.root_user.rendered}",
-    "${data.ignition_user.core_user.rendered}",
-    "${data.ignition_user.service_user.rendered}",
+    data.ignition_user.root_user.rendered,
+    data.ignition_user.core_user.rendered,
+    data.ignition_user.service_user.rendered,
   ]
 }
