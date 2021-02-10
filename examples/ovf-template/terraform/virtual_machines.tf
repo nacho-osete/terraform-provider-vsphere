@@ -31,7 +31,6 @@ resource "vsphere_virtual_machine" "virtual_machines" {
   vapp {
     properties = {
       "guestinfo.ignition.config.data" = data.ignition_config.ignition_config.*.rendered[count.index]
-      "guestinfo.ignition.config.data.encoding" = "base64"
     }
   }
 

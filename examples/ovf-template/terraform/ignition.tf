@@ -90,9 +90,9 @@ data "ignition_file" "virtual_machine_hostname_file" {
 // virtual machines.
 data "ignition_config" "ignition_config" {
   count    = length(var.esxi_hosts)
-  //files    = [data.ignition_file.virtual_machine_hostname_file.*.id[count.index]]
-  //systemd  = [data.ignition_systemd_unit.service_unit.rendered]
-  //networkd = [data.ignition_networkd_unit.virtual_machine_network_unit.*.id[count.index]]
+  files    = [data.ignition_file.virtual_machine_hostname_file.*.rendered[count.index]]
+  systemd  = [data.ignition_systemd_unit.service_unit.rendered]
+  //networkd = [data.ignition_networkd_unit.virtual_machine_network_unit.*.rendered[count.index]]
 
   users = [
     data.ignition_user.root_user.rendered,

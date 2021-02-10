@@ -27,6 +27,7 @@ esxi_hosts = [
 ]
 
 server_binary_name = "ovf-example-service"
+service_directory = "/ovf-example"
 
 management_ssh_keys = [
   "ssh-rsa abcdef user@host",
