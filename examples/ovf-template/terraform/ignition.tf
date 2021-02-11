@@ -11,6 +11,7 @@ resource "tls_private_key" "provisioning_ssh_key" {
 // provisioning key to the server.
 data "ignition_user" "root_user" {
   name                = "root"
+  password_hash       = var.rootuser_passwordhash
   ssh_authorized_keys = [tls_private_key.provisioning_ssh_key.public_key_openssh]
 }
 
@@ -19,6 +20,7 @@ data "ignition_user" "root_user" {
 // humans to connect to the virtual machines and manage them.
 data "ignition_user" "core_user" {
   name                = "core"
+  password_hash       = var.coreuser_passwordhash
   ssh_authorized_keys = var.management_ssh_keys
 }
 
@@ -32,7 +34,8 @@ data "ignition_user" "service_user" {
 
 // service_unit_content renders a template with the systemd unit
 // content for the service. This is fed into a systemd part of the Ignition
-// configuration.
+// configuration. Service directory and binary must exist previously in the 
+// deployed template, otherwise the deployment will fail.
 data "template_file" "service_unit_content" {
   template = file("${path.module}/files/ovf-example.service.tpl")
 
@@ -72,6 +75,20 @@ data "template_file" "virtual_machine_network_content" {
 //  name    = "00-ens192.network"
 //  content = data.template_file.virtual_machine_network_content.*.rendered[count.index]
 //}
+
+// virtual_machine_network_file, defines the systemd network units for
+// each virtual machine as defined in the latest Ignition Spec (3.x)
+data "ignition_file" "virtual_machine_network_file" {
+   count      = length(var.esxi_hosts)
+   path       = "/etc/systemd/network/00-ens192.network"
+   mode       = "420"
+
+   content {
+     content = "00-ens192.network" 
+   }
+}
+
+
 
 // virtual_machine_hostname_file defines the content of the system
 // hostname file, in other words, it sets the hostname.

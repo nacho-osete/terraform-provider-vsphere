@@ -49,7 +49,7 @@ variable "virtual_machine_network_address" {
 // 10.0.0.0/24, the 3 virtual machines will be assigned addresses 10.0.0.100,
 // 10.0.0.101, and 10.0.0.102.
 variable "virtual_machine_ip_address_start" {
-  default = "100"
+  default = "110"
 }
 
 // The default gateway for the network the virtual machines reside in.
@@ -80,6 +80,17 @@ variable "service_user" {
 variable "service_directory" {
   type    = string
   default = "/ovf-example"
+}
+
+// A password hash for the root and core users to be set up during the virtual
+// machine customization process. Ignition will understand any hash generated 
+// with 'mkpasswd --method=sha-512'
+variable "rootuser_passwordhash" {
+  type    = string
+}
+
+variable "coreuser_passwordhash" {
+  type    = string
 }
 
 // A list of SSH keys that will be pushed to the "core" user on each CoreOS

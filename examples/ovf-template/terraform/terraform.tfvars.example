@@ -29,6 +29,11 @@ esxi_hosts = [
 server_binary_name = "ovf-example-service"
 service_directory = "/ovf-example"
 
+// You can generate your password hashes through your shell 
+// environment, just use: openssl passwd -1
+rootuser_passwordhash = "hash-example12345678910111213ABCDF"
+coreuser_passwordhash = "hash-example13121110987654321FBCDA"
+
 management_ssh_keys = [
   "ssh-rsa abcdef user@host",
 ]

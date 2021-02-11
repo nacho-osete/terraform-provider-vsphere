@@ -54,6 +54,7 @@ resource "vsphere_virtual_machine" "virtual_machines" {
       "systemctl start ovf-example.service",
       "update-ssh-keys -u root -d coreos-ignition || /bin/true",
       "rm /root/.ssh/authorized_keys",
+      "sudo systemctl restart systemd-networkd",
     ]
 
   connection {
