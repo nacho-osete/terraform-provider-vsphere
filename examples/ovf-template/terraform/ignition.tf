@@ -53,48 +53,27 @@ data "ignition_systemd_unit" "service_unit" {
   content = data.template_file.service_unit_content.rendered
 }
 
-// virtual_machine_network_content renders a template with the systemd-networkd unit
-// content for a specific virtual machine.
-data "template_file" "virtual_machine_network_content" {
-  count    = length(var.esxi_hosts)
-  template = file("${path.module}/files/00-ens192.network.tpl")
-
-  vars = {
-    address = cidrhost(var.virtual_machine_network_address, var.virtual_machine_ip_address_start + count.index)
-    mask    = element(split("/", var.virtual_machine_network_address), 1)
-    gateway = var.virtual_machine_gateway
-    dns     = join("\n", formatlist("DNS=%s", var.virtual_machine_dns_servers))
+// virtual_machine_network_file, defines the network adapter configuration for
+// each virtual machine. In this case, Fedora CoreOS uses NetworkManager, so we 
+// will inject the resulting network file in the appropriate path. 
+data "ignition_file" "virtual_machine_network_file" {
+  count      = length(var.esxi_hosts)
+  path       = "/etc/NetworkManager/system-connections/ens192.nmconnection"
+  mode       = "384"
+  content {
+    content   = templatefile("${path.module}/files/ens192.network.tpl", {
+      gateway = var.virtual_machine_gateway
+      dns     = join("\n", var.virtual_machine_dns_servers)
+      mask    = element(split("/", var.virtual_machine_network_address), 1)
+      address = cidrhost(var.virtual_machine_network_address, var.virtual_machine_ip_address_start + count.index)
+    })
   }
 }
-
-// networkd data source deprecated with latest Ignition Spec (3.x)
-// virtual_machine_network_unit defines the systemd network units for
-// each virtual machine.
-//data "ignition_networkd_unit" "virtual_machine_network_unit" {
-//  count   = length(var.esxi_hosts)
-//  name    = "00-ens192.network"
-//  content = data.template_file.virtual_machine_network_content.*.rendered[count.index]
-//}
-
-// virtual_machine_network_file, defines the systemd network units for
-// each virtual machine as defined in the latest Ignition Spec (3.x)
-data "ignition_file" "virtual_machine_network_file" {
-   count      = length(var.esxi_hosts)
-   path       = "/etc/systemd/network/00-ens192.network"
-   mode       = "420"
-
-   content {
-     content = "00-ens192.network" 
-   }
-}
-
-
 
 // virtual_machine_hostname_file defines the content of the system
 // hostname file, in other words, it sets the hostname.
 data "ignition_file" "virtual_machine_hostname_file" {
   count      = length(var.esxi_hosts)
-  //filesystem = "root"
   path       = "/etc/hostname"
   mode       = "420"
 
@@ -107,9 +86,12 @@ data "ignition_file" "virtual_machine_hostname_file" {
 // virtual machines.
 data "ignition_config" "ignition_config" {
   count    = length(var.esxi_hosts)
-  files    = [data.ignition_file.virtual_machine_hostname_file.*.rendered[count.index]]
   systemd  = [data.ignition_systemd_unit.service_unit.rendered]
-  //networkd = [data.ignition_networkd_unit.virtual_machine_network_unit.*.rendered[count.index]]
+
+  files = [
+    data.ignition_file.virtual_machine_hostname_file.*.rendered[count.index],
+    data.ignition_file.virtual_machine_network_file.*.rendered[count.index],
+  ]
 
   users = [
     data.ignition_user.root_user.rendered,

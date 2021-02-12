@@ -54,8 +54,10 @@ resource "vsphere_virtual_machine" "virtual_machines" {
       "systemctl start ovf-example.service",
       "update-ssh-keys -u root -d coreos-ignition || /bin/true",
       "rm /root/.ssh/authorized_keys",
-      "sudo systemctl restart systemd-networkd",
+      "nmcli con reload ens192",
+      "rpm-ostree install open-vm-tools -r",
     ]
+
 
   connection {
       host        = "self.public_ip"
